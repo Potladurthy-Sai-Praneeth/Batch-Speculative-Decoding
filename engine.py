@@ -12,11 +12,12 @@ import time
 from torch.nn.utils.rnn import pad_sequence
 from KVCacheModel import KVCacheModel
 from Speculative_decoding import SpeculativeDecoding
+from utils import *
 
 
 
 class Engine:
-    def __init__(self,target_id = None, draft_id= None,  max_length=512, temperature=1.0,gamma=5,top_k=0,top_p=0.95):
+    def __init__(self,target_id = None, draft_id= None,  max_length=512, temperature=0.6,gamma=5,top_k=0,top_p=0.9):
         self.target_model_id = target_id
         self.draft_model_id = draft_id
         

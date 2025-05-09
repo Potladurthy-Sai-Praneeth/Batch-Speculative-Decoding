@@ -52,9 +52,9 @@ class KVCacheModel:
 
         for i in range(gamma):
             if generated_tokens == []:
-                r,c = find_max_nonzero_cols(self._attention_mask)
+                r,c = find_last_valid_token(self._attention_mask)
                 inputs = input_ids[r,c].view(-1,1)
-                print(f'Input_ids  is {inputs.shape}, {inputs}')
+                # print(f'Input_ids  is {inputs.shape}, {inputs}')
             else:
                 inputs = generated_tokens[-1]
             
@@ -76,21 +76,22 @@ class KVCacheModel:
     @torch.no_grad()
     def target_generate(self,input_ids,attention_mask,gamma=5):
         if self.prefil_flag:
-            outputs = self._model(input_ids=input_ids,attention_mask=attention_mask,use_cache=True)
+            self._attention_mask = torch.cat([attention_mask, torch.ones((input_ids.shape[0],1), device=self._device)],dim=1)
+            outputs = self._model(input_ids=input_ids,attention_mask=self._attention_mask,use_cache=True)
             self._past_key_values = outputs.past_key_values
             raw_logits = outputs.logits.to(torch.float32)
             self._prob_history = norm_logits_3d(raw_logits[:,-1:,:],self._temperature,self._top_k,self._top_p)
-            self._attention_mask = attention_mask
+            # self._attention_mask = attention_mask
             self.prefil_flag = False
             return None
         
         else:
-            input_ids = input_ids[:,-gamma:]
-            outputs = self._model(input_ids=input_ids,attention_mask=attention_mask ,past_key_values=self._past_key_values,use_cache=True)
+            input_ids = input_ids[:,-gamma-1:]
+            self._attention_mask = torch.cat([self._attention_mask, torch.ones_like(input_ids, device=self._device)],dim=1)
+            outputs = self._model(input_ids=input_ids,attention_mask=self._attention_mask ,past_key_values=self._past_key_values,use_cache=True)
             self._past_key_values = outputs.past_key_values
             raw_logits = outputs.logits.to(torch.float32)
             self._prob_history = torch.cat([self._prob_history, norm_logits_3d(raw_logits,self._temperature,self._top_k,self._top_p)],dim=1)
-            self._attention_mask = torch.cat([self._attention_mask, torch.ones_like(input_ids, device=self._device)],dim=1)
 
             return self._prob_history[:,-gamma-1:-1,:], self._prob_history[:,-1:,:]
     
@@ -115,8 +116,10 @@ class KVCacheModel:
         for batch_idx, end_idx in batch_idx_dict.items():
             self._attention_mask[batch_idx, end_idx:] = 0
 
-        print(f'After rollback attention_mask shape is {self._attention_mask.shape}')
+        # print(f'After rollback prob history shape is {self._prob_history.shape}')
+        # print(f'After rollback attention_mask shape is {self._attention_mask.shape}')
         for kv in self._past_key_values:
             k,v = kv
-            print(f'After rollback, K:{k.shape} and V:{v.shape}')
+            # print(f'After rollback, K:{k.shape} and V:{v.shape}')
             break
+        # print(f'Attention mask is {self._attention_mask}')

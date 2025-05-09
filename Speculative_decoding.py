@@ -15,7 +15,6 @@ from KVCacheModel import KVCacheModel
 torch.backends.cuda.enable_mem_efficient_sdp(False)
 torch.backends.cuda.enable_flash_sdp(False)
 
-
 class SpeculativeDecoding:
     def __init__(self,target= None, draft = None, tokenizer = None, gamma=5,max_length = 512, temperature = 1.0, top_k = 0, top_p = 0.9, target_device = "cuda" if torch.cuda.is_available() else "cpu", draft_device = "cuda" if torch.cuda.is_available() else "cpu"):
         
@@ -49,55 +48,55 @@ class SpeculativeDecoding:
 
         prefix_len = tokenized_text.input_ids.shape[1]
         prefix = tokenized_text.input_ids
-        batch_size = prefix.shape[0]
         max_token_len = self.max_length + prefix.shape[1]
         attention_mask = tokenized_text.attention_mask
         # Prefill target model
         self.target_model.target_generate(prefix, attention_mask, gamma=self.gamma)
 
         while prefix_len < max_token_len:
-            print(f'Starting generation with prefix shape {prefix.shape}')
-            print('--'*30)
-            print(f"Draft model generation step with prefix:{prefix.shape} but prefix_len is {prefix_len}...")
+            # print(f'Starting generation with prefix shape {prefix.shape}')
+            # print('--'*30)
+            # print(f"Draft model generation step with prefix:{prefix.shape} but prefix_len is {prefix_len}...")
             draft_tokens, draft_probs, attention_mask = self.draft_model.draft_generate(prefix,attention_mask ,gamma=self.gamma)
             self.draft_forward_times += self.gamma
 
-            print(f'Generated draft tokens shape is {draft_tokens.shape}')
-            print(f'Generated draft probabilities shape is {draft_probs.shape}')
-            print(f'Draft attention mask shape is {attention_mask.shape}')
+            # print(f'Generated draft tokens shape is {draft_tokens.shape}')
+            # print(f'Generated draft probabilities shape is {draft_probs.shape}')
+            # print(f'Draft attention mask shape is {attention_mask.shape}')
             # print(f'Draft prob history shape is {self.draft_model._prob_history.shape}')
-            print('---'*30)
-            for i in range(draft_tokens.shape[0]):
-                print(f'Batch element :{i} the {self.gamma} draft tokens : {self.tokenizer.decode(draft_tokens[i],skip_special_tokens=True)}')
-            print('---'*30)
+            # print('---'*30)
 
-            print(f"Target model validation step with prefix:{prefix.shape[1] +self.gamma }...")
+            # print(f"Target model validation step with prefix:{prefix.shape[1] +self.gamma }...")
             target_probs, last_token_probs = self.target_model.target_generate(torch.cat([prefix,draft_tokens],dim=1), attention_mask, gamma=self.gamma)
             self.target_forward_times += 1
-            print(f'Generated target probabilities shape is {target_probs.shape}')
-            print('---'*30)
+            # print(f'Generated target probabilities shape is {target_probs.shape}')
+            # print('---'*30)
 
             assert draft_probs.shape == target_probs.shape, f"Draft:{draft_probs.shape} and target:{target_probs.shape} probabilities must have the same shape"
 
             draft_gathered = draft_probs.gather(-1, draft_tokens.unsqueeze(-1)).squeeze(-1)
             target_gathered = target_probs.gather(-1, draft_tokens.unsqueeze(-1)).squeeze(-1)
-            print(f'Gathered draft probabilities shape is {draft_gathered.shape}, {draft_gathered}')
-            print(f'Gathered target probabilities shape is {target_gathered.shape}, {target_gathered}')
+            # print(f'Gathered draft probabilities shape is {draft_gathered.shape}, {draft_gathered}')
+            # print(f'Gathered target probabilities shape is {target_gathered.shape}, {target_gathered}')
 
-            ratio = torch.min(torch.ones_like(draft_gathered), target_gathered/ draft_gathered )
+            epsilon = 1e-6
+            ratio = torch.minimum(
+                torch.ones_like(draft_gathered), 
+                target_gathered / (draft_gathered + epsilon)
+            )
+            
             torch.manual_seed(self.seed+prefix_len)
             random_value = torch.rand_like(ratio,device=self.draft_device)
             reject_mask = (ratio < random_value)
-            print(f'Ratio shape is {ratio.shape} and Reject mask shape is {reject_mask.shape}, {reject_mask}')
+            # print(f'Reject mask is {reject_mask.shape}, {reject_mask}')
 
-            epsilon = 1e-6
             min_probs = torch.min(target_probs, draft_probs)
             rejection_probs = 1.0 - torch.sum(min_probs, dim=-1, keepdim=True)
             adjusted_distribution = (target_probs - min_probs) / (rejection_probs + epsilon)
 
             # Calculate first rejection index for each sequence in batch
             first_reject_idx = torch.argmax(reject_mask.int(), dim=1)
-            no_rejects = ~reject_mask.any(dim=1) # actual code
+            no_rejects = ~reject_mask.any(dim=1) 
 
             # When no rejections, set to draft_tokens length
             first_reject_idx[no_rejects] = draft_tokens.shape[1]
@@ -135,7 +134,7 @@ class SpeculativeDecoding:
             index_accepted_len_dict = {i: seq.shape[0] for i, seq in enumerate(final_sequences_list)} 
             new_total_lengths = {i: prefix.shape[1] + seq.shape[0] for i, seq in enumerate(final_sequences_list)} 
 
-            print(f'Index max length dict is {index_accepted_len_dict}')
+            # print(f'Index max length dict is {index_accepted_len_dict}')
             
             # Pad sequences to same length
             final_tokens_padded = pad_sequence(
@@ -144,21 +143,21 @@ class SpeculativeDecoding:
                 padding_value=self.tokenizer.pad_token_id
             )
 
-            print(f'Final tokens padded shape is {final_tokens_padded.shape}, {final_tokens_padded}')
+            # print(f'Final tokens padded shape is {final_tokens_padded.shape}, {final_tokens_padded}')
             # Create new prefix by concatenating with original prefix
             prefix = torch.cat([prefix, final_tokens_padded], dim=1)
 
             prefix_len = min(new_total_lengths.values())
 
-            print(f'---'*20)
-            print(f'Draft roll back')
-            self.draft_model.rollback(new_total_lengths,index_accepted_len_dict)
-            print(f'--'*20)
-            print(f'Target roll back')
-            self.target_model.rollback(new_total_lengths,index_accepted_len_dict)
+            # print(f'---'*20)
+            # print(f'Draft roll back')
+            self.draft_model.rollback(new_total_lengths)
+            # print(f'--'*20)
+            # print(f'Target roll back')
+            self.target_model.rollback(new_total_lengths)
 
             attention_mask = self.draft_model._attention_mask
             
-            print('***'*30)
+            # print('***'*30)
 
         return prefix

@@ -51,8 +51,8 @@ def norm_logits_3d(logits: torch.Tensor, temperature: float, top_k: float, top_p
     probs = F.softmax(logits, dim=-1)
 
     return probs
-
-def find_max_nonzero_cols(x):
+    
+def find_last_valid_token(x):
     nonzero_indices = torch.nonzero(x > 0)
     unique_rows = torch.unique(nonzero_indices[:, 0])
     max_cols = torch.zeros_like(unique_rows)
