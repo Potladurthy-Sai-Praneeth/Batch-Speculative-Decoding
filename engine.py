@@ -82,8 +82,6 @@ class Engine:
         self.batch_size = len(prompts)
         self.tokenized_text = self.tokenize_text(prompts)
 
-        print(f'Tokenized text shape is {self.tokenized_text["input_ids"].shape}')
-
         generated_text = self.speculative_decoding.generate(self.tokenized_text)
 
         return self.tokenizer , generated_text

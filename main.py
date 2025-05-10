@@ -49,7 +49,7 @@ def main():
         inputs = speculate.tokenize_text(args.prompts)
         
         # Process each prompt in batch mode for auto-regressive generation
-        outputs = speculate.target_model.generate(
+        tokenizer,outputs = speculate.target_model.generate(
             inputs.input_ids.to(speculate.draft_device),
             attention_mask=inputs.attention_mask.to(speculate.device),
             max_length=inputs.input_ids.shape[1] + args.max_length,
@@ -62,7 +62,7 @@ def main():
         # Print results
         for i, prompt in enumerate(args.prompts):
             print(f"Prompt: {prompt}")
-            print(f"Generated Text: {speculate.tokenizer.decode(outputs[i], skip_special_tokens=True)}\n")
+            print(f"Generated Text: {tokenizer.decode(outputs[i], skip_special_tokens=True)}\n")
             print('---' * 50)
         
         print(f"Auto-regressive generation completed in {end_time - start_time:.2f} seconds")
@@ -72,14 +72,14 @@ def main():
         start_time = time.time()
         
         # Generate using speculative decoding
-        outputs = speculate.generate(args.prompts)
+        tokenizer,outputs = speculate.generate(args.prompts)
         
         end_time = time.time()
         
         # Print results
         for i, prompt in enumerate(args.prompts):
             print(f"Prompt: {prompt}")
-            print(f"Generated Text: {speculate.tokenizer.decode(outputs[i], skip_special_tokens=True)}\n")
+            print(f"Generated Text: {tokenizer.decode(outputs[i], skip_special_tokens=True)}\n")
             print('---' * 50)
         
         print(f"Draft model forward times: {speculate.speculative_decoding.draft_forward_times}")

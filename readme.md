@@ -70,9 +70,9 @@ def rollback(self, batch_idx_dict, index_accepted_len_dict):
 ### Usage
 - Speculative Decoding
 ```
-python main.py --target_model "HuggingFaceTB/SmolLM-1.7B-Instruct" --draft_model "HuggingFaceTB/SmolLM-360M-Instruct" --prompts "What is random forest?" "Explain black holes" "Who is the father of python programming?" "What is the capital of France?" --gamma 5 --max_tokens 100 --temperature 0.75
+python main.py --target_model "HuggingFaceTB/SmolLM-1.7B-Instruct" --draft_model "HuggingFaceTB/SmolLM-360M-Instruct" --prompts "What is random forest?" "Explain black holes" "Who is the father of python programming?" "What is the capital of France?" --gamma 5 --max_length 100 --temperature 0.75
 ```
 - Auto-regressive Decoding
 ```python
-python main.py --target_model "HuggingFaceTB/SmolLM-1.7B-Instruct" --draft_model "HuggingFaceTB/SmolLM-360M-Instruct" --prompts "What is random forest?" "Explain black holes" "Who is the father of python programming?" "What is the capital of France?" --gamma 5 --max_tokens 100 --temperature 0.75 --auto_regressive
+python main.py --target_model "HuggingFaceTB/SmolLM-1.7B-Instruct" --draft_model "HuggingFaceTB/SmolLM-360M-Instruct" --prompts "What is random forest?" "Explain black holes" "Who is the father of python programming?" "What is the capital of France?" --gamma 5 --max_length 100 --temperature 0.75 --auto_regressive
 ```

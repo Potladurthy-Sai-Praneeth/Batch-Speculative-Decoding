@@ -127,7 +127,6 @@ class SpeculativeDecoding:
                 else:
                     # All draft tokens were accepted, so take all of them
                     final_sequence = draft_tokens[b, :first_reject_idx[b]]
-                    print(f'last token probs :{last_token_probs.shape} and final sequence is {final_sequence.shape}')
                     # final_sequence = torch.cat([final_sequence,torch.multinomial(last_token_probs, num_samples=1)],dim=1)
                 final_sequences_list.append(final_sequence)
 
