@@ -63,7 +63,7 @@ def main():
         for i, prompt in enumerate(args.prompts):
             print(f"Prompt: {prompt}")
             print(f"Generated Text: {speculate.tokenizer.decode(outputs[i], skip_special_tokens=True)}\n")
-            print('---' * 50)
+            print('---' * 30)
         
         print(f"Auto-regressive generation completed in {end_time - start_time:.2f} seconds")
         
@@ -80,7 +80,7 @@ def main():
         for i, prompt in enumerate(args.prompts):
             print(f"Prompt: {prompt}")
             print(f"Generated Text: {tokenizer.decode(outputs[i], skip_special_tokens=True)}\n")
-            print('---' * 50)
+            print('---' * 30)
         
         print(f"Draft model forward times: {speculate.speculative_decoding.draft_forward_times}")
         print(f"Target model forward times: {speculate.speculative_decoding.target_forward_times}")
