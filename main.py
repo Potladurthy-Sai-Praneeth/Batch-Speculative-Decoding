@@ -50,7 +50,7 @@ def main():
         
         # Process each prompt in batch mode for auto-regressive generation
         tokenizer,outputs = speculate.target_model.generate(
-            inputs.input_ids.to(speculate.draft_device),
+            inputs.input_ids.to(speculate.device),
             attention_mask=inputs.attention_mask.to(speculate.device),
             max_length=inputs.input_ids.shape[1] + args.max_length,
             do_sample=True,
