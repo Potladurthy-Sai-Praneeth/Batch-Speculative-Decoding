@@ -69,10 +69,11 @@ def rollback(self, batch_idx_dict, index_accepted_len_dict):
 
 ### Usage
 - Speculative Decoding
-```
-python /kaggle/working/Batch-Speculative-Decoding/main.py --target_model "HuggingFaceTB/SmolLM-1.7B-Instruct" --draft_model "HuggingFaceTB/SmolLM-360M-Instruct" --prompts "What is a robot?" "What is a black hole?" "Who is the father of python programming?" "What is the capital of France?" --gamma 5 --max_length 100 --temperature 0.6
-```
-- Auto-regressive Decoding
 ```python
-! python /kaggle/working/Batch-Speculative-Decoding/main.py --target_model "HuggingFaceTB/SmolLM-1.7B-Instruct" --draft_model "HuggingFaceTB/SmolLM-360M-Instruct" --prompts "What is a robot?" "What is a black hole?" "Who is the father of python programming?" "What is the capital of France?" --gamma 5 --max_length 100 --temperature 0.6 --auto_regressive
+main.py --target_model "HuggingFaceTB/SmolLM-1.7B-Instruct" --draft_model "HuggingFaceTB/SmolLM-360M-Instruct" --prompts "What is a robot?" "What is a black hole?" "Who is the father of python programming?" "What is the capital of France?" --gamma 5 --max_length 100 --temperature 0.8
+```
+
+Auto-regressive Decoding
+```python
+! python main.py --target_model "HuggingFaceTB/SmolLM-1.7B-Instruct" --draft_model "HuggingFaceTB/SmolLM-360M-Instruct" --prompts "What is a robot?" "What is a black hole?" "Who is the father of python programming?" "What is the capital of France?" --gamma 5 --max_length 100 --temperature 0.6 --auto_regressive
 ```
