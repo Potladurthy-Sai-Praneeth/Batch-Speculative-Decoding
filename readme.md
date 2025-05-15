@@ -65,7 +65,7 @@ def rollback(self, batch_idx_dict, index_accepted_len_dict):
     
     for batch_idx, end_idx in batch_idx_dict.items():
         self._attention_mask[batch_idx, end_idx:] = 0
-
+```
 
 ### Usage
 - Speculative Decoding
